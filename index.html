@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>AI Marriage Portal v5.0</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+    <style>
+        :root { --primary: #075e54; --secondary: #25d366; --accent: #34b7f1; --bg: #ece5dd; }
+        body { font-family: 'Segoe UI', sans-serif; background-color: var(--bg); margin: 0; padding: 10px; color: #333; }
+        .container { background: #fff; padding: 20px; border-radius: 15px; max-width: 550px; margin: 10px auto; box-shadow: 0 8px 24px rgba(0,0,0,0.15); }
+        .header { text-align: center; border-bottom: 3px solid var(--secondary); margin-bottom: 20px; padding-bottom: 10px; }
+        .section-title { background: linear-gradient(90deg, var(--primary), var(--accent)); padding: 10px; margin: 25px 0 10px; border-radius: 8px; color: white; font-weight: bold; font-size: 14px; }
+        .ai-panel { background: #f0f7f4; border: 2px dashed var(--accent); padding: 12px; border-radius: 12px; margin-bottom: 10px; text-align: center; }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; font-weight: 600; margin-bottom: 5px; color: var(--primary); font-size: 13px; }
+        input, textarea, select { width: 100%; padding: 10px; border: 2px solid #ddd; border-radius: 8px; box-sizing: border-box; font-size: 15px; }
+        .btn-row { display: flex; gap: 8px; margin-bottom: 10px; flex-wrap: wrap; }
+        .btn-sm { flex: 1; min-width: 100px; padding: 10px; border-radius: 20px; border: none; cursor: pointer; font-weight: bold; font-size: 11px; display: flex; align-items: center; justify-content: center; gap: 5px; }
+        .scan-btn { background: var(--accent); color: white; }
+        .cam-btn { background: #6c757d; color: white; }
+        #submit-whatsapp { background: var(--secondary); color: white; width: 100%; padding: 15px; border: none; border-radius: 30px; font-weight: bold; margin-top: 10px; cursor: pointer; }
+        #submit-drive { background: var(--primary); color: white; width: 100%; padding: 15px; border: none; border-radius: 30px; font-weight: bold; margin-top: 10px; cursor: pointer; }
+        .loader { display: none; border: 3px solid #f3f3f3; border-top: 3px solid var(--accent); border-radius: 50%; width: 20px; height: 20px; animation: spin 1s linear infinite; margin: 5px auto; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .status-msg { font-size: 11px; font-weight: bold; color: #666; }
+        .req { color: red; }
+        .manual-input { display: none; margin-top: 10px; }
+        #cam-modal { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:#000; z-index:999; flex-direction:column; }
+        #video { width:100%; height:80%; object-fit: cover; }
+        .cam-controls { height:20%; display:flex; justify-content:center; align-items:center; background:#111; gap:40px; }
+        .shutter { width:70px; height:70px; background:#fff; border-radius:50%; border:5px solid #444; }
+    </style>
+</head>
+<body>
+
+<div id="cam-modal">
+    <video id="video" autoplay playsinline></video>
+    <div class="cam-controls">
+        <button style="color:white; background:none; border:none;" onclick="stopCam()">CANCEL</button>
+        <button class="shutter" onclick="capturePhoto()"></button>
+    </div>
+</div>
+
+<div class="container">
+    <div class="header">
+        <h2>AI Registration Portal</h2>
+        <p style="font-size: 11px; color: #666;">v5.0 Full Integrated | Dev by Kr09</p>
+    </div>
+
+    <div class="form-group">
+        <label>Legal Advocate <span class="req">*</span></label>
+        <select id="advocateSelect" onchange="toggleManual('advocateSelect', 'manualAdvDiv', 'manualAdvName')" required>
+            <option value="">-- Select Advocate --</option>
+            <option value="Dev Tyagi">Dev Tyagi</option>
+            <option value="Shiva Gupta">Shiva Gupta</option>
+            <option value="Ashish">Ashish</option>
+            <option value="Rahul Dev">Rahul Dev</option>
+            <option value="Abhishek">Abhishek</option>
+            <option value="Monu">Monu</option>
+            <option value="Moolchand">Moolchand</option>
+            <option value="Danish Boss">Danish Boss</option>
+            <option value="Manual">✎ Manual Fill</option>
+        </select>
+        <div id="manualAdvDiv" class="manual-input"><input type="text" id="manualAdvName" placeholder="Type Advocate Name"></div>
+    </div>
+
+    <div class="section-title">♂ BOY'S INFO & DOCS</div>
+    <div class="ai-panel">
+        <div id="boyLoader" class="loader"></div>
+        <div class="btn-row">
+            <button class="btn-sm scan-btn" onclick="document.getElementById('b_af').click()">📷 Scan Front (AI)</button>
+            <button class="btn-sm scan-btn" style="background:#555" onclick="document.getElementById('b_ab').click()">📷 Scan Back (AI)</button>
+        </div>
+        <span id="boyStatus" class="status-msg">Scan Aadhar to Auto-Fill</span>
+    </div>
+    <div class="form-group"><label>Boy Name <span class="req">*</span></label><input type="text" id="boyName"></div>
+    <div class="form-group"><label>Father's Name <span class="req">*</span></label><input type="text" id="boyFather"></div>
+    <div class="form-group"><label>Mother's Name <span class="req">*</span></label><input type="text" id="boyMother"></div>
+    <div class="form-group"><label>DOB <span class="req">*</span></label><input type="date" id="boyDob"></div>
+    <div class="form-group"><label>Address <span class="req">*</span></label><textarea id="boyAddress" rows="2"></textarea></div>
+    <div class="form-group"><label>Pincode <span class="req">*</span></label><input type="number" id="boyPincode"></div>
+    
+    <div class="form-group"><label>Boy Aadhar Front <span class="req">*</span></label><input type="file" id="b_af" accept="image/*" onchange="handleAI(this, 'boy', 'front')"></div>
+    <div class="form-group"><label>Boy Aadhar Back (Opt)</label><input type="file" id="b_ab" accept="image/*" onchange="handleAI(this, 'boy', 'back')"></div>
+    <div class="form-group"><label>Boy Photo (30KB) <span class="req">*</span></label><input type="file" id="b_photo" accept="image/*"></div>
+    <button class="btn-sm cam-btn" onclick="startCam('b_photo')" style="margin-bottom:10px;">📸 Snap Boy Photo</button>
+    <div class="form-group"><label>Boy PAN <span class="req">*</span></label><input type="file" id="b_pan" accept="image/*"></div>
+    <div class="form-group"><label>Boy Marksheet <span class="req">*</span></label><input type="file" id="b_mark" accept="image/*"></div>
+    <div class="form-group"><label>Boy Affidavit <span class="req">*</span></label><input type="file" id="b_aff" accept="image/*"></div>
+
+    <div class="section-title">♀ GIRL'S INFO & DOCS</div>
+    <div class="ai-panel">
+        <div id="girlLoader" class="loader"></div>
+        <div class="btn-row">
+            <button class="btn-sm scan-btn" onclick="document.getElementById('g_af').click()">📷 Scan Front (AI)</button>
+            <button class="btn-sm scan-btn" style="background:#555" onclick="document.getElementById('g_ab').click()">📷 Scan Back (AI)</button>
+        </div>
+        <span id="girlStatus" class="status-msg">Scan Aadhar to Auto-Fill</span>
+    </div>
+    <div class="form-group"><label>Girl Name <span class="req">*</span></label><input type="text" id="girlName"></div>
+    <div class="form-group"><label>Father's Name <span class="req">*</span></label><input type="text" id="girlFather"></div>
+    <div class="form-group"><label>Mother's Name <span class="req">*</span></label><input type="text" id="girlMother"></div>
+    <div class="form-group"><label>DOB <span class="req">*</span></label><input type="date" id="girlDob"></div>
+    <div class="form-group"><label>Address <span class="req">*</span></label><textarea id="girlAddress" rows="2"></textarea></div>
+    <div class="form-group"><label>Pincode <span class="req">*</span></label><input type="number" id="girlPincode"></div>
+    
+    <div class="form-group"><label>Girl Aadhar Front <span class="req">*</span></label><input type="file" id="g_af" accept="image/*" onchange="handleAI(this, 'girl', 'front')"></div>
+    <div class="form-group"><label>Girl Aadhar Back (Opt)</label><input type="file" id="g_ab" accept="image/*" onchange="handleAI(this, 'girl', 'back')"></div>
+    <div class="form-group"><label>Girl Photo (30KB) <span class="req">*</span></label><input type="file" id="g_photo" accept="image/*"></div>
+    <button class="btn-sm cam-btn" onclick="startCam('g_photo')" style="margin-bottom:10px;">📸 Snap Girl Photo</button>
+    <div class="form-group"><label>Girl PAN <span class="req">*</span></label><input type="file" id="g_pan" accept="image/*"></div>
+    <div class="form-group"><label>Girl Marksheet <span class="req">*</span></label><input type="file" id="g_mark" accept="image/*"></div>
+    <div class="form-group"><label>Girl Affidavit <span class="req">*</span></label><input type="file" id="g_aff" accept="image/*"></div>
+
+    <div class="section-title">💍 MARRIAGE DETAILS</div>
+    <div class="form-group">
+        <label>Marriage Center <span class="req">*</span></label>
+        <select id="centerSelect" onchange="toggleManual('centerSelect', 'manualCenterDiv', 'manualCenterName')" required>
+            <option value="">-- Select Center --</option>
+            <option value="Naitik Vaidik Sanskar Samiti Regd. Gandhi Nagar, Ghaziabad">Naitik Vaidik Sanskar Samiti Regd. Gandhi Nagar, Ghaziabad</option>
+            <option value="Moti Mahal Masjid, Kella Bhatta, Ghaziabad">Moti Mahal Masjid, Kella Bhatta, Ghaziabad</option>
+            <option value="Arya Samaj Vivah Uthan Kendra, Old Vijay Nagar, Ghaziabad">Arya Samaj Vivah Uthan Kendra, Old Vijay Nagar, Ghaziabad</option>
+            <option value="Manual">✎ Manual Fill</option>
+        </select>
+        <div id="manualCenterDiv" class="manual-input"><input type="text" id="manualCenterName" placeholder="Type Center Name"></div>
+    </div>
+    <div class="form-group"><label>Marriage Date <span class="req">*</span></label><input type="date" id="marriageDate"></div>
+
+    <div class="section-title">👥 WITNESSES</div>
+    <div class="form-group">
+        <label>Witness 1 <span class="req">*</span></label>
+        <select id="w1Select" onchange="handleWit(1)" required>
+            <option value="">-- Select Witness 1 --</option>
+            <option value="Vipin Tyagi">Vipin Tyagi</option>
+            <option value="Mohd Furqan">Mohd Furqan</option>
+            <option value="Narayan">Narayan</option>
+            <option value="Manual">✎ Manual Fill</option>
+        </select>
+        <div id="manualW1Div" class="manual-input"><input type="text" id="manualW1Name" placeholder="Name"></div>
+    </div>
+    <div class="form-group"><label>W1 Address</label><textarea id="w1Address" rows="2"></textarea></div>
+    <div class="form-group"><label>W1 Aadhar Front <span class="req">*</span></label><input type="file" id="w1_af" accept="image/*"></div>
+    <div class="form-group"><label>W1 Aadhar Back (Opt)</label><input type="file" id="w1_ab" accept="image/*"></div>
+    <div class="form-group"><label>W1 Affidavit <span class="req">*</span></label><input type="file" id="w1_aff" accept="image/*"></div>
+
+    <div class="form-group">
+        <label>Witness 2 <span class="req">*</span></label>
+        <select id="w2Select" onchange="handleWit(2)" required>
+            <option value="">-- Select Witness 2 --</option>
+            <option value="Sangeeta Kumar">Sangeeta Kumar</option>
+            <option value="Soniya Soni">Soniya Soni</option>
+            <option value="VIPIN KUMAR">VIPIN KUMAR</option>
+            <option value="Bittu">Bittu</option>
+            <option value="Manual">✎ Manual Fill</option>
+        </select>
+        <div id="manualW2Div" class="manual-input"><input type="text" id="manualW2Name" placeholder="Name"></div>
+    </div>
+    <div class="form-group"><label>W2 Address</label><textarea id="w2Address" rows="2"></textarea></div>
+    <div class="form-group"><label>W2 Aadhar Front <span class="req">*</span></label><input type="file" id="w2_af" accept="image/*"></div>
+    <div class="form-group"><label>W2 Aadhar Back (Opt)</label><input type="file" id="w2_ab" accept="image/*"></div>
+
+    <button id="submit-whatsapp" onclick="sendWA()">🚀 Send WhatsApp Message</button>
+    <button id="submit-drive" onclick="uploadDrive()">📁 Save Docs to Drive (.jpeg)</button>
+    <div id="finalStatus" style="text-align:center; padding:10px; font-weight:bold;"></div>
+</div>
+
+<script>
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbz1SzPVrVE8VwAIKhLj1jvPanAfT2z7I9Fk1HcQ9L_6I8F0c4WDRHYuucucuAer0L3U/exec";
+    const GROQ_KEY = "PASTE_YOUR_GROQ_KEY_HERE";
+    
+    const ADDRS = {
+        "Vipin Tyagi": "H No Ff25, Gali No 7, Budh Bazar Vijay Nagar, Sain Vihar, Ghaziabad, UP 201001",
+        "Mohd Furqan": "House No 939, Kaila Bhatta, Ghaziabad, UP 201001",
+        "Narayan": "Rasoolpur Gujran, Shamli, UP 247775",
+        "Sangeeta Kumar": "House No 136 Loni Ghaziabad 201102",
+        "Soniya Soni": "House Number A 1, Karawal Nagar, Delhi 110094",
+        "VIPIN KUMAR": "165 NEW VIKAS NAGAR LONI GHAZIABAD 201102",
+        "Bittu": "H No 45/3, Shanti Vihar, Karhal, Mainpuri, UP 205264"
+    };
+
+    let activeCam = '';
+    const video = document.getElementById('video');
+
+    function toggleManual(s, d, i) {
+        const sel = document.getElementById(s), div = document.getElementById(d);
+        div.style.display = (sel.value === "Manual") ? 'block' : 'none';
+    }
+
+    function handleWit(n) {
+        const sel = document.getElementById(`w${n}Select`), addr = document.getElementById(`w${n}Address`);
+        toggleManual(`w${n}Select`, `manualW${n}Div`, `manualW${n}Name`);
+        if(ADDRS[sel.value]) addr.value = ADDRS[sel.value];
+    }
+
+    function startCam(id) {
+        activeCam = id;
+        navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } })
+        .then(s => { video.srcObject = s; document.getElementById('cam-modal').style.display='flex'; });
+    }
+
+    function stopCam() {
+        if(video.srcObject) video.srcObject.getTracks().forEach(t => t.stop());
+        document.getElementById('cam-modal').style.display='none';
+    }
+
+    function capturePhoto() {
+        const c = document.createElement('canvas');
+        c.width = video.videoWidth; c.height = video.videoHeight;
+        c.getContext('2d').drawImage(video, 0, 0);
+        c.toBlob(b => {
+            const f = new File([b], "shot.jpeg", {type:"image/jpeg"});
+            const dt = new DataTransfer(); dt.items.add(f);
+            document.getElementById(activeCam).files = dt.files;
+            stopCam();
+        }, 'image/jpeg', 0.9);
+    }
+
+    async function handleAI(input, prefix, side) {
+        const status = document.getElementById(prefix+'Status'), loader = document.getElementById(prefix+'Loader');
+        if(!input.files[0] || !GROQ_KEY) return;
+        loader.style.display="block"; status.innerText="⏳ AI Processing...";
+        try {
+            const b64 = await resizeForAI(input.files[0]);
+            const prompt = side==='front' ? "JSON: name, dob (YYYY-MM-DD), father_name" : "JSON: address, pincode";
+            const res = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+                method:"POST", headers:{"Authorization":`Bearer ${GROQ_KEY}`, "Content-Type":"application/json"},
+                body: JSON.stringify({ model: "meta-llama/llama-3.2-11b-vision-preview", messages: [{role:"user", content:[{type:"text", text:prompt}, {type:"image_url", image_url:{url:b64}}]}], response_format:{type:"json_object"} })
+            });
+            const d = await res.json(); const info = JSON.parse(d.choices[0].message.content);
+            if(side==='front'){
+                if(info.name) document.getElementById(prefix+'Name').value = info.name;
+                if(info.dob) document.getElementById(prefix+'Dob').value = info.dob;
+                if(info.father_name) document.getElementById(prefix+'Father').value = info.father_name;
+            } else {
+                if(info.address) document.getElementById(prefix+'Address').value = info.address;
+                if(info.pincode) document.getElementById(prefix+'Pincode').value = info.pincode;
+            }
+            status.innerText="✅ Success";
+        } catch(e) { status.innerText="❌ Failed"; }
+        finally { loader.style.display="none"; }
+    }
+
+    async function uploadDrive() {
+        const stat = document.getElementById('finalStatus');
+        const adv = document.getElementById('advocateSelect').value === "Manual" ? document.getElementById('manualAdvName').value : document.getElementById('advocateSelect').value;
+        if(!adv) { alert("Enter Advocate Name"); return; }
+        
+        stat.innerText = "Compressing to JPEG...";
+        const zip = new JSZip(), now = new Date();
+        const stamp = `${String(now.getDate()).padStart(2,'0')}-${String(now.getMonth()+1).padStart(2,'0')}-${now.getFullYear()}_${String(now.getHours()).padStart(2,'0')}-${String(now.getMinutes()).padStart(2,'0')}`;
+
+        const config = [
+            {id:'b_photo', name:'Boy_Photo.jpeg', limit:30}, {id:'b_pan', name:'Boy_PAN.jpeg', limit:60},
+            {id:'b_mark', name:'Boy_Mark.jpeg', limit:60}, {id:'b_aff', name:'Boy_Aff.jpeg', limit:60},
+            {id:'g_photo', name:'Girl_Photo.jpeg', limit:30}, {id:'g_pan', name:'Girl_PAN.jpeg', limit:60},
+            {id:'g_mark', name:'Girl_Mark.jpeg', limit:60}, {id:'g_aff', name:'Girl_Aff.jpeg', limit:60},
+            {id:'w1_aff', name:'W1_Aff.jpeg', limit:60}
+        ];
+
+        for(let c of config){
+            const f = document.getElementById(c.id).files[0];
+            if(f) zip.file(c.name, await processImg(f, c.limit));
+        }
+
+        await mergeAadhar(zip, 'b_af', 'b_ab', 'Boy_Aadhar.jpeg');
+        await mergeAadhar(zip, 'g_af', 'g_ab', 'Girl_Aadhar.jpeg');
+        await mergeAadhar(zip, 'w1_af', 'w1_ab', 'W1_Aadhar.jpeg');
+        await mergeAadhar(zip, 'w2_af', 'w2_ab', 'W2_Aadhar.jpeg');
+
+        stat.innerText = "Saving to Drive...";
+        const b64 = await zip.generateAsync({type:"base64"});
+        fetch(SCRIPT_URL, {method:"POST", mode:"no-cors", body: JSON.stringify({base64:b64, filename:`${stamp}_Adv_${adv.replace(/ /g,'_')}.zip`}) })
+        .then(() => stat.innerText="✅ Saved to Drive!")
+        .catch(() => stat.innerText="❌ Failed");
+    }
+
+    function sendWA() {
+        const getV = (s, m) => document.getElementById(s).value === "Manual" ? document.getElementById(m).value : document.getElementById(s).value;
+        let m = `*MARRIAGE REGISTRATION*%0AAdv: ${getV('advocateSelect', 'manualAdvName')}%0A%0A*BOY:* ${document.getElementById('boyName').value}%0A*GIRL:* ${document.getElementById('girlName').value}%0A*CENTER:* ${getV('centerSelect', 'manualCenterName')}`;
+        window.open(`https://wa.me/919990150544?text=${m}`, '_blank');
+    }
+
+    async function processImg(f, l) {
+        const i = await readImg(f); const c = document.createElement('canvas');
+        c.width = i.width; c.height = i.height; c.getContext('2d').drawImage(i,0,0);
+        return compress(c, l);
+    }
+
+    async function mergeAadhar(z, fId, bId, n) {
+        const f = document.getElementById(fId).files[0], b = document.getElementById(bId).files[0];
+        if(!f) return;
+        const iF = await readImg(f); const c = document.createElement('canvas');
+        if(b){
+            const iB = await readImg(b); c.width = Math.max(iF.width, iB.width); c.height = iF.height + iB.height + 20;
+            const ctx = c.getContext('2d'); ctx.fillStyle="white"; ctx.fillRect(0,0,c.width,c.height);
+            ctx.drawImage(iF,0,0); ctx.drawImage(iB,0,iF.height+20);
+        } else { c.width = iF.width; c.height = iF.height; c.getContext('2d').drawImage(iF,0,0); }
+        z.file(n, await compress(c, 60));
+    }
+
+    function readImg(f) { return new Promise(r => { const rd = new FileReader(); rd.onload = e => { const i = new Image(); i.onload = () => r(i); i.src = e.target.result; }; rd.readAsDataURL(f); }); }
+    
+    function compress(c, l) {
+        return new Promise(r => {
+            let q = 0.9; const s = () => { c.toBlob(b => { if(b.size/1024 <= l || q < 0.1) r(b); else { q -= 0.1; s(); } }, 'image/jpeg', q); }; s();
+        });
+    }
+
+    function resizeForAI(f) {
+        return new Promise(r => {
+            const rd = new FileReader(); rd.readAsDataURL(f); rd.onload = e => {
+                const i = new Image(); i.src = e.target.result; i.onload = () => {
+                    const c = document.createElement('canvas'); c.width = 800; c.height = i.height * (800/i.width);
+                    c.getContext('2d').drawImage(i,0,0,c.width,c.height); r(c.toDataURL('image/jpeg', 0.6));
+                }
+            }
+        });
+    }
+</script>
+</body>
+</html>
