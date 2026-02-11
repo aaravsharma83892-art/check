@@ -1,0 +1,17 @@
+name: Groq Proxy API
+
+on:
+  workflow_dispatch:
+  repository_dispatch:
+    types: [groq_request]
+
+jobs:
+  proxy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Call Groq API
+        run: |
+          curl https://api.groq.com/openai/v1/chat/completions \
+            -H "Authorization: Bearer ${{ secrets.GROQ_API_KEY }}" \
+            -H "Content-Type: application/json" \
+            -d '${{ github.event.client_payload.body }}'
