@@ -1,14 +1,29 @@
-name: Deploy
+name: Inject Secret and Deploy
 on:
   push:
-    branches: [ main ]
+    branches: [ "main" ] # or "master" depending on your branch name
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
 jobs:
-  build:
+  build-and-deploy:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
-      - name: Inject Secret
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Inject API Key
         run: |
-          sed -i 's/{{GROQ_API_KEY}}/${{ secrets.GROQ_API_KEY }}/g' index.html
+          # This replaces the placeholder with your actual Secret
+          sed -i 's/__SECRET_GROQ_KEY__/${{ secrets.GROQ_API_KEY }}/g' index.html
+
+      - name: Upload Pages Artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: '.'
+
       - name: Deploy to GitHub Pages
-        # (Use a standard deployment action here)
+        uses: actions/deploy-pages@v4
