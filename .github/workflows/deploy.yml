@@ -1,7 +1,7 @@
 name: Inject Secret and Deploy
 on:
   push:
-    branches: [ "main" ] # or "master" depending on your branch name
+    branches: [ "main" ]
 
 permissions:
   contents: read
@@ -9,7 +9,7 @@ permissions:
   id-token: write
 
 jobs:
-  build-and-deploy:
+  build:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -17,7 +17,7 @@ jobs:
 
       - name: Inject API Key
         run: |
-          # This replaces the placeholder with your actual Secret
+          # Matches the placeholder in your HTML
           sed -i 's/__SECRET_GROQ_KEY__/${{ secrets.GROQ_API_KEY }}/g' index.html
 
       - name: Upload Pages Artifact
@@ -25,5 +25,14 @@ jobs:
         with:
           path: '.'
 
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    # THIS IS THE MISSING SECTION:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
       - name: Deploy to GitHub Pages
+        id: deployment
         uses: actions/deploy-pages@v4
