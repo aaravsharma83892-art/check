@@ -1,40 +1,32 @@
-name: Deploy Marriage Portal
-
+name: Deploy with Secret
 on:
   push:
-    branches: ["main"]
+    branches: ["main"]  # Ensure this matches your branch name (main or master)
 
 permissions:
   contents: read
   pages: write
   id-token: write
 
-# This ensures only one deployment happens at a time
-concurrency:
-  group: "pages"
-  cancel-in-progress: false
-
 jobs:
-  build-and-deploy:
-    # --- THIS WAS THE MISSING PART ---
+  deploy:
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
-    # ---------------------------------
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout code
+      - name: Checkout Code
         uses: actions/checkout@v4
 
-      - name: Inject API Key
+      - name: Inject Secret Key
         run: |
-          # Replaces placeholder with your Secret
-          sed -i "s|REPLACE_ME_WITH_REAL_KEY|${{ secrets.GROQ_API_KEY }}|g" index.html
-          
+          # This command searches for the placeholder and replaces it with the secret
+          sed -i "s|__SECRET_GROQ_KEY__|${{ secrets.GROQ_API_KEY }}|g" index.html
+
       - name: Setup Pages
         uses: actions/configure-pages@v4
 
-      - name: Upload artifact
+      - name: Upload Artifact
         uses: actions/upload-pages-artifact@v3
         with:
           path: '.'
