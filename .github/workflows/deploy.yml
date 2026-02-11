@@ -2,9 +2,8 @@ name: Deploy to GitHub Pages
 
 on:
   push:
-    branches: ["main"]
+    branches: ["main"] # Double check if your branch is named 'main' or 'master'
 
-# ADD THIS SECTION
 permissions:
   contents: write
 
