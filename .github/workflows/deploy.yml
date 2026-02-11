@@ -24,3 +24,4 @@ jobs:
         with:
           folder: . 
           branch: gh-pages # The branch where the final site lives
+          token: ${{ secrets.GITHUB_TOKEN }}
