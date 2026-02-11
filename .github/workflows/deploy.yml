@@ -2,7 +2,12 @@ name: Deploy to GitHub Pages
 
 on:
   push:
-    branches: ["main"] # Or your default branch name
+    branches: ["main"]
+
+# ADD THIS BLOCK START
+permissions:
+  contents: write
+# ADD THIS BLOCK END
 
 jobs:
   build-and-deploy:
@@ -13,8 +18,8 @@ jobs:
 
       - name: Inject Secret into HTML
         run: |
+          # This replaces the placeholder with the actual secret
           sed -i "s/REPLACE_WITH_GROQ_API_KEY/${{ secrets.GROQ_API_KEY }}/g" index.html
-        # Note: Replace index.html with your actual filename if different
 
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
