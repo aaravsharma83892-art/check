@@ -1,34 +1,23 @@
-name: Deploy Marriage Portal
+name: Deploy to GitHub Pages
 
 on:
   push:
-    branches:
-      - main  # Runs every time you push to the main branch
-
-permissions:
-  contents: read
-  pages: write
-  id-token: write
+    branches: ["main"] # Or your default branch name
 
 jobs:
-  deploy:
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
+  build-and-deploy:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout Repository
+      - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Setup Pages
-        uses: actions/configure-pages@v4
-
-      - name: Upload Artifact
-        uses: actions/upload-pages-artifact@v3
-        with:
-          # This uploads the entire folder (ensure your index.html is in the root)
-          path: '.'
+      - name: Inject Secret into HTML
+        run: |
+          sed -i "s/REPLACE_WITH_GROQ_API_KEY/${{ secrets.GROQ_API_KEY }}/g" index.html
+        # Note: Replace index.html with your actual filename if different
 
       - name: Deploy to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v4
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./
