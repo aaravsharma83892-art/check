@@ -1,26 +1,21 @@
-name: Deploy to GitHub Pages
+name: Deploy Website
 
 on:
   push:
-    branches: ["main"] # Double check if your branch is named 'main' or 'master'
-
-permissions:
-  contents: write
+    branches: [ main ]
 
 jobs:
-  deploy:
+  build:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
+      - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Inject Secret
+      - name: Use the Secret Key
+        env:
+          # This maps your GitHub Secret to an Environment Variable
+          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }} 
         run: |
-          sed -i 's/REPLACE_WITH_GROQ_KEY/${{ secrets.GROQ_API_KEY }}/g' index.html
-
-      - name: Deploy to GitHub Pages
-        uses: peaceiris/actions-gh-pages@v3
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./ 
-          force_orphan: true  # <--- Add this line
+          echo "The script is running using the secret key."
+          # If you have a build script that needs the key:
+          npm run build
