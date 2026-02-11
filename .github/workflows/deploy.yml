@@ -2,30 +2,22 @@ name: Deploy to GitHub Pages
 
 on:
   push:
-    branches: ["main"]
-
-permissions:
-  contents: write
+    branches: ["main"] # or your branch name
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout Code
+      - name: Checkout
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0 # 👈 CRITICAL FIX: Downloads full history to prevent git conflicts
 
-      - name: Prepare Production Files
+      - name: Inject Secret
         run: |
-          mkdir public
-          cp index.html public/index.html
-          # Inject the key into the file inside the 'public' folder
-          sed -i 's/GROQ_KEY_PLACEHOLDER/${{ secrets.GROQ_API_KEY }}/g' public/index.html
+          sed -i 's/REPLACE_WITH_GROQ_KEY/${{ secrets.GROQ_API_KEY }}/g' index.html
+        # Replace 'index.html' with your actual filename if it's different
 
       - name: Deploy to GitHub Pages
-        uses: JamesIves/github-pages-deploy-action@v4
+        uses: peaceiris/actions-gh-pages@v3
         with:
-          folder: public # 👈 FIX: We deploy this clean folder instead of the root
-          branch: gh-pages
-          force: true # 👈 FIX: Forces the update even if git complains
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./
